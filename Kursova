@@ -1,0 +1,233 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <locale>
+
+using namespace std;
+
+class Company {
+    string title;
+
+public:
+
+    Company() {
+        this->title = "";
+    }
+
+    Company(string Title) {
+        this->title = Title;
+    }
+
+    void set_title(string Title) {
+        this->title = Title;
+    }
+
+    string return_title() {
+        return title;
+    }
+
+};
+
+class Paroplav {
+    Company* company;
+
+public:
+    string name;
+    int countOfPlaces, countOfPassengers;
+
+    Paroplav() {
+        this->name = "";
+        this->countOfPlaces = 0;
+        this->countOfPassengers = 0;
+    }
+
+    Paroplav(string Name, int CountOfPlaces, int СountOfPassengers, Company* Company) {
+        this->name = Name;
+        this->countOfPlaces = CountOfPlaces;
+        this->countOfPassengers = СountOfPassengers;
+        this->company = Company;
+    }
+
+    void set_name(string Name) {
+        this->name = Name;
+    }
+    void set_countOfPlaces(int CountOfPlaces) {
+        this->countOfPlaces = CountOfPlaces;
+    }
+
+    void set_countOfPassengers(int CountOfPassengers) {
+        this->countOfPassengers = CountOfPassengers;
+    }
+
+    void set_company(Company* Company) {
+        this->company = Company;
+    }
+
+    string return_name() {
+        return name;
+    }
+
+    int return_countOfPlaces() {
+        return countOfPlaces;
+    }
+
+    int return_countOfPassengers() {
+        return countOfPassengers;
+    }
+
+    Company return_company() {
+        return *company;
+    }
+
+};
+
+
+int extraPassengers(Paroplav obj) {
+    if (obj.return_countOfPlaces() < obj.return_countOfPassengers())
+        return obj.return_countOfPassengers() - obj.return_countOfPlaces();
+    else return 0;
+}
+
+
+int freeSeating(Paroplav obj) {
+    if (obj.return_countOfPlaces() - obj.return_countOfPassengers() >= 0)
+        return obj.return_countOfPlaces() - obj.return_countOfPassengers();
+    else return 0;
+}
+
+
+int paroplavCondition(Paroplav obj) {
+    float places = obj.return_countOfPlaces();
+    if (extraPassengers(obj) > 0) {
+        if (extraPassengers(obj) / places >= 0.5) return 1;
+        else return 2;
+    }
+    if (freeSeating(obj) > 0) {
+        if (freeSeating(obj) / places >= 0.5) return 3;
+        else return 2;
+    }
+    return 0;
+}
+
+
+
+int main()
+{
+    setlocale(0, "Ukr");
+    string title, name, str, temp;
+    int countOfPassengers, countOfPlaces, button, count = 0;
+
+    fstream out_file;
+    ifstream file("in.txt");
+    out_file.open("out.txt", fstream::out | fstream::trunc);
+
+    if (file) {
+        while (!file.eof()) {
+            getline(file, str, '\n');
+            count++;
+        }
+
+        int* condition = new int[count];
+        Company* companyList = new Company[count];
+        Paroplav* paroplavList = new Paroplav[count];
+
+        file.clear();
+        file.seekg(0);
+
+        for (int i = 0; i < count; i++) {
+            file >> title;
+            file >> temp;
+            file >> name;
+            file >> temp;
+            file >> countOfPlaces;
+            file >> temp;
+            file >> temp;
+            file >> countOfPassengers;
+            file >> temp;
+
+            companyList[i].set_title(title);
+            paroplavList[i].set_company(companyList);
+            paroplavList[i].set_name(name);
+            paroplavList[i].set_countOfPassengers(countOfPassengers);
+            paroplavList[i].set_countOfPlaces(countOfPlaces);
+        }
+
+        for (int i = 0; i < count; i++) {
+            for (int j = i + 1; j < count; j++) {
+                if (companyList[i].return_title() > companyList[j].return_title()) {
+                    swap(companyList[i], companyList[j]);
+                    swap(paroplavList[i], paroplavList[j]);
+                }
+            }
+        }
+
+        for (int i = 0; i < count; i++) 
+            condition[i] = paroplavCondition(paroplavList[i]);
+
+        for (; ;) {
+            cout << "\n----- МЕНЮ -----";
+            cout << "\n1) Вивести на екран всi пароплави, якi не допливуть до мiсця призначення";
+            cout << "\n2) Вивести на екран всi пароплави, якi попливуть порожняком";
+            cout << "\n3) Вивести весь список пароплавiв та iнформацiю про них";
+            cout << "\n4) Вивести весь список пароплавiв у файл";
+            cout << "\n5) Завершити роботу\n";
+            cout << "\nВиберiть операцiю - ";
+            cin >> button;
+
+            switch (button) {
+            case 1:
+                for (int i = 0; i < count; i++) {
+                    if (condition[i] == 1) cout << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << 
+                        " потоне, тому що пасажирiв >=50%. Кiлькiсть пасажирiв: " << paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                }
+                break;
+
+            case 2:
+                for (int i = 0; i < count; i++) {
+                    if (condition[i] == 3) cout << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << 
+                        " попливе порожняком, тому що вiльних мiсть >=50%. Кiлькiсть пасажирiв: " << paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                }
+                break;
+
+            case 3:
+                for (int i = 0; i < count; i++) {
+                    if (condition[i] == 1) cout << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << 
+                        " потоне, тому що пасажирiв >=50%. Кiлькiсть пасажирiв: " << paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                    if (condition[i] == 3) cout << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() <<
+                        " попливе порожняком, тому що вiльних мiсть >=50%. Кiлькiсть пасажирiв: " << paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                    if (condition[i] == 2) cout << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << ". Кiлькiсть пасажирiв: " << 
+                        paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                }
+                break;
+
+            case 4:
+                for (int i = 0; i < count; i++) {
+                    if (condition[i] == 1) out_file << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << 
+                        " потоне, тому що пасажирiв >=50%. Кiлькiсть пасажирiв: " << paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                    if (condition[i] == 3) out_file << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << 
+                        " попливе порожняком, тому що вiльних мiсть >=50%. Кiлькiсть пасажирiв: " << paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                    if (condition[i] == 2) out_file << "\nПароплав " << paroplavList[i].return_name() << " компанiї " << paroplavList[i].return_company().return_title() << ". Кiлькiсть пасажирiв: " << 
+                        paroplavList[i].return_countOfPassengers() << ", кiлькiсть мiсць: " << paroplavList[i].return_countOfPlaces() << endl;
+                }
+                cout << "\nРезультат виведено в файл out.txt!\n";
+                break;
+
+            case 5:
+                return 0;
+
+            default:
+                cout << "\nПомилка введення!\n";
+            }
+
+        }
+
+        delete[] companyList;
+        delete[] paroplavList;
+        delete[] condition;
+    }
+    else
+        cout << "Помилка читання файлу!";
+
+    file.close();
+    out_file.close();
+}
